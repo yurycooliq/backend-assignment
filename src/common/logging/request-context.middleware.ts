@@ -1,8 +1,8 @@
 import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { NextFunction, Request, Response } from 'express';
-import { ApplicationError } from '../errors/application-error';
 import { RequestWithContext } from '../http/request-context';
+import { normalizeBrandId } from '../validation/request-values';
 
 @Injectable()
 export class RequestContextMiddleware implements NestMiddleware {
@@ -11,11 +11,10 @@ export class RequestContextMiddleware implements NestMiddleware {
   use(request: Request & RequestWithContext, response: Response, next: NextFunction): void {
     const startedAt = Date.now();
     const requestId = this.firstHeader(request, 'X-Correlation-Id') ?? this.firstHeader(request, 'X-Request-Id') ?? `req_${randomUUID()}`;
-    const brandId = this.firstHeader(request, 'X-Brand-Id')?.trim();
+    const rawBrandId = this.firstHeader(request, 'X-Brand-Id');
 
     request.requestContext = {
       requestId,
-      brandId: brandId || undefined,
     };
 
     response.setHeader('X-Request-Id', requestId);
@@ -24,7 +23,7 @@ export class RequestContextMiddleware implements NestMiddleware {
       this.logger.log(
         JSON.stringify({
           requestId,
-          brandId: brandId || null,
+          brandId: request.requestContext?.brandId ?? null,
           method: request.method,
           path: request.originalUrl || request.url,
           statusCode: response.statusCode,
@@ -33,8 +32,8 @@ export class RequestContextMiddleware implements NestMiddleware {
       );
     });
 
-    if (this.requiresBrand(request) && !brandId) {
-      throw ApplicationError.badRequest('BRAND_ID_REQUIRED', 'X-Brand-Id header is required');
+    if (rawBrandId !== undefined || this.requiresBrand(request)) {
+      request.requestContext.brandId = normalizeBrandId(rawBrandId);
     }
 
     next();
@@ -51,8 +50,8 @@ export class RequestContextMiddleware implements NestMiddleware {
   }
 
   private requiresBrand(request: Request): boolean {
-    const path = request.path || request.url;
+    const path = (request.originalUrl || request.url || request.path).split('?')[0];
 
-    return !path.startsWith('/docs') && path !== '/favicon.ico';
+    return !path.startsWith('/docs') && path !== '/favicon.ico' && path !== '/health';
   }
 }

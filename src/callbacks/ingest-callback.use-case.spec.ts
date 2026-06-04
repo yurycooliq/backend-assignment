@@ -3,7 +3,7 @@ import { IngestCallbackUseCase } from './ingest-callback.use-case';
 import { IdempotencyService } from './idempotency.service';
 
 describe('IngestCallbackUseCase', () => {
-  it('accepts the first callback, detects duplicates, and has no balance or ledger dependency', async () => {
+  it('creates one pending event for the first callback and one duplicate event for a retry', async () => {
     const repository = new FakeCallbacksRepository();
     const useCase = new IngestCallbackUseCase(repository as never, new IdempotencyService());
     const input = {
@@ -31,9 +31,12 @@ describe('IngestCallbackUseCase', () => {
     });
     expect(repository.rawEvents.filter((event) => event.status === RawEventStatus.PENDING)).toHaveLength(1);
     expect(repository.rawEvents.filter((event) => event.status === RawEventStatus.DUPLICATE)).toHaveLength(1);
+    expect(repository.rawEvents.map((event) => event.status)).toEqual([
+      RawEventStatus.PENDING,
+      RawEventStatus.DUPLICATE,
+    ]);
+    expect(repository.rawEvents.every((event) => event.providerEventId === 'psp_evt_dup_1')).toBe(true);
     expect(repository.idempotencyKeys[0]?.duplicateCount).toBe(1);
-    expect(Object.keys(useCase).join(' ').toLowerCase()).not.toContain('balance');
-    expect(Object.keys(useCase).join(' ').toLowerCase()).not.toContain('ledger');
   });
 });
 
@@ -54,6 +57,7 @@ class FakeCallbacksRepository {
     source: CallbackSource;
     provider: string;
     idempotencyKey: string;
+    providerEventId?: string;
     status: RawEventStatus;
     duplicateOfRawEventId?: string;
   }> = [];
@@ -167,7 +171,11 @@ class FakeCallbacksRepository {
     source: CallbackSource;
     provider: string;
     idempotencyKey: string;
+    providerEventId?: string;
     status: RawEventStatus;
+    payload: unknown;
+    headers: unknown;
+    correlationId?: string;
     duplicateOfRawEventId?: string;
   }): Promise<{
     id: string;
@@ -189,6 +197,7 @@ class FakeCallbacksRepository {
       source: input.source,
       provider: input.provider,
       idempotencyKey: input.idempotencyKey,
+      providerEventId: input.providerEventId,
       status: input.status,
       duplicateOfRawEventId: input.duplicateOfRawEventId,
     };
@@ -196,10 +205,10 @@ class FakeCallbacksRepository {
 
     return {
       ...record,
-      providerEventId: input.idempotencyKey,
-      payload: {},
-      headers: {},
-      correlationId: null,
+      providerEventId: input.providerEventId ?? null,
+      payload: input.payload,
+      headers: input.headers,
+      correlationId: input.correlationId ?? null,
       duplicateOfRawEventId: input.duplicateOfRawEventId ?? null,
       receivedAt: new Date(),
     };

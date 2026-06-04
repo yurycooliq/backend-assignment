@@ -6,6 +6,16 @@ info:
 servers:
   - url: http://localhost:3000
 paths:
+  /health:
+    get:
+      summary: Service health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
   /auth/register:
     post:
       summary: Register user in current brand
@@ -89,6 +99,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/BrandId'
         - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
         - $ref: '#/components/parameters/WebhookEventId'
         - $ref: '#/components/parameters/Provider'
       requestBody:
@@ -122,6 +133,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/BrandId'
         - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
         - $ref: '#/components/parameters/WebhookEventId'
         - $ref: '#/components/parameters/Provider'
       requestBody:
@@ -161,6 +173,8 @@ components:
       required: true
       schema:
         type: string
+        maxLength: 64
+        pattern: '^[A-Za-z0-9_-]+$'
       example: brandA
     CorrelationId:
       name: X-Correlation-Id
@@ -175,16 +189,40 @@ components:
       required: false
       schema:
         type: string
+        maxLength: 128
       example: psp_evt_1001
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 128
+        pattern: '^[^\x00-\x1F\x7F]+$'
+      example: idem_123
     Provider:
       name: provider
       in: path
       required: true
       schema:
         type: string
+        maxLength: 64
         pattern: '^[a-z0-9_-]+$'
       example: mock-pay
   schemas:
+    HealthResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              enum: [ok]
+        meta:
+          $ref: '#/components/schemas/Meta'
     AuthRequest:
       type: object
       required: [email, password]

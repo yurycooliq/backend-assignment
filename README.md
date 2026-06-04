@@ -46,6 +46,7 @@ This project is intentionally small. It focuses on correctness, module boundarie
 
 ### Observability
 
+- `GET /health`
 - Request/correlation ID support
 - Structured logs with method, path, status, brand ID, and duration
 - Structured error responses with machine-readable error codes
@@ -146,7 +147,9 @@ pnpm test:e2e
 The most important tests cover:
 
 - callback idempotency;
+- concurrent duplicate callback handling;
 - tenant leakage protection;
+- request header and provider validation;
 - identity business logic.
 
 ---
@@ -168,7 +171,7 @@ BCRYPT_ROUNDS=10
 
 ## Tenant model
 
-Every request must include:
+Every tenant-scoped request must include:
 
 ```http
 X-Brand-Id: brandA
@@ -181,6 +184,10 @@ Authorization: Bearer <accessToken>
 ```
 
 A session created under `brandA` cannot be used with `X-Brand-Id: brandB`.
+
+`GET /health` and `/docs` do not require `X-Brand-Id`.
+
+`X-Brand-Id` is trimmed and must be a safe tenant slug up to 64 characters: letters, numbers, `_`, or `-`.
 
 ---
 
@@ -197,6 +204,10 @@ The idempotency key is resolved from:
 1. `Idempotency-Key` header;
 2. `X-Webhook-Event-Id` header;
 3. `payload.eventId`.
+
+The key is trimmed, capped at 128 characters, and must not contain control characters. The webhook `provider` path parameter must be a lowercase slug up to 64 characters.
+
+`raw_events.idempotencyKey` stores the resolved idempotency key. `raw_events.providerEventId` stores `payload.eventId` when the provider sends one, so a header idempotency key and provider event ID remain distinct.
 
 A duplicate callback returns a successful 2xx response but is not treated as a second processable event.
 

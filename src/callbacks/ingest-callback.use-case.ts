@@ -2,12 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, RawEventStatus } from '@prisma/client';
 import { IncomingHttpHeaders } from 'http';
 import { ApplicationError } from '../common/errors/application-error';
+import { normalizeProvider } from '../common/validation/request-values';
 import { isUniqueConstraintViolation } from '../persistence/prisma-errors';
 import { CallbacksRepository } from '../persistence/repositories/callbacks.repository';
 import { IdempotencyService } from './idempotency.service';
 import { IngestCallbackInput, IngestCallbackResult } from './dto/ingest-callback.dto';
-
-const PROVIDER_SLUG_PATTERN = /^[a-z0-9_-]+$/;
 
 @Injectable()
 export class IngestCallbackUseCase {
@@ -17,7 +16,7 @@ export class IngestCallbackUseCase {
   ) {}
 
   async execute(input: IngestCallbackInput): Promise<IngestCallbackResult> {
-    this.assertValidProvider(input.provider);
+    const normalizedInput = { ...input, provider: normalizeProvider(input.provider) };
     const idempotencyKey = this.idempotencyService.resolveKey(input.headers, input.payload);
 
     if (!idempotencyKey) {
@@ -25,10 +24,10 @@ export class IngestCallbackUseCase {
     }
 
     try {
-      return await this.createFirstEvent(input, idempotencyKey);
+      return await this.createFirstEvent(normalizedInput, idempotencyKey);
     } catch (error) {
       if (isUniqueConstraintViolation(error)) {
-        return this.recordDuplicateEvent(input, idempotencyKey);
+        return this.recordDuplicateEvent(normalizedInput, idempotencyKey);
       }
 
       throw error;
@@ -52,7 +51,7 @@ export class IngestCallbackUseCase {
           source: input.source,
           provider: input.provider,
           idempotencyKey,
-          providerEventId: idempotencyKey,
+          providerEventId: this.idempotencyService.extractProviderEventId(input.payload),
           status: RawEventStatus.PENDING,
           payload: toJson(input.payload),
           headers: toJson(safeHeaders(input.headers)),
@@ -96,7 +95,7 @@ export class IngestCallbackUseCase {
           source: input.source,
           provider: input.provider,
           idempotencyKey,
-          providerEventId: idempotencyKey,
+          providerEventId: this.idempotencyService.extractProviderEventId(input.payload),
           status: RawEventStatus.DUPLICATE,
           payload: toJson(input.payload),
           headers: toJson(safeHeaders(input.headers)),
@@ -116,12 +115,6 @@ export class IngestCallbackUseCase {
         firstRawEventId: updated.firstRawEventId ?? undefined,
       };
     });
-  }
-
-  private assertValidProvider(provider: string): void {
-    if (!PROVIDER_SLUG_PATTERN.test(provider)) {
-      throw ApplicationError.badRequest('INVALID_PROVIDER', 'Provider must be a safe lowercase slug');
-    }
   }
 }
 

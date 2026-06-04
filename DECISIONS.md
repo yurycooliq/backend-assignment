@@ -31,13 +31,14 @@ Trade-off:
 
 ## 3. Explicit tenant header: `X-Brand-Id`
 
-Every request must include `X-Brand-Id`.
+Every tenant-scoped request must include `X-Brand-Id`. `GET /health` and `/docs` are intentionally tenant-neutral.
 
 Why:
 
 - The assignment explicitly asks for tenant isolation through `brandId`.
 - A visible header makes tests and reviewer checks simple.
 - It prevents hidden assumptions about global user identity.
+- The header is validated as a short slug before any use.
 
 Trade-off:
 
@@ -60,7 +61,7 @@ Trade-off:
 
 - Each authenticated request needs a DB lookup.
 - That is acceptable for a small backend MVP and makes tenant checks explicit.
-- The auth guard first resolves the unguessable token hash to detect a valid token from another brand and return the required `403 TENANT_MISMATCH`. Profile data is still loaded with `brandId + userId`, not by user ID alone.
+- The auth guard first looks up sessions by `brandId + tokenHash`. If no scoped session exists, it performs a minimal global select of only `{ id, brandId }` to distinguish `401 INVALID_SESSION` from the required `403 TENANT_MISMATCH`. Profile data is still loaded with `brandId + userId`, not by user ID alone.
 
 ---
 
@@ -131,6 +132,7 @@ Why:
 - PSP/GSP adapters should not update balances directly.
 - Future ledger processing can consume `raw_events.status = PENDING`.
 - Audit/debugging becomes easier because original payloads are preserved.
+- The resolved `idempotencyKey` and provider-owned `payload.eventId` are stored separately because the stable retry key may come from an HTTP header while the provider event ID lives in the body.
 
 Trade-off:
 

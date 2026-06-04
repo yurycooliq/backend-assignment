@@ -25,21 +25,27 @@ export class SessionService {
 
   async authenticate(brandId: string, accessToken: string): Promise<Session> {
     const tokenHash = this.hashToken(accessToken);
-    const session = await this.sessionsRepository.findByTokenHash(tokenHash);
+    const session = await this.sessionsRepository.findByTokenHashForBrand(brandId, tokenHash);
 
-    if (!session) {
-      throw ApplicationError.unauthorized('INVALID_SESSION', 'Session token is invalid');
+    if (session) {
+      this.assertUsableSession(session);
+
+      return session;
     }
 
-    if (session.brandId !== brandId) {
+    const tokenBrand = await this.sessionsRepository.findBrandByTokenHash(tokenHash);
+
+    if (tokenBrand && tokenBrand.brandId !== brandId) {
       throw ApplicationError.forbidden('TENANT_MISMATCH', 'Session belongs to a different brand');
     }
 
+    throw ApplicationError.unauthorized('INVALID_SESSION', 'Session token is invalid');
+  }
+
+  private assertUsableSession(session: Session): void {
     if (session.revokedAt || session.expiresAt.getTime() <= Date.now()) {
       throw ApplicationError.unauthorized('INVALID_SESSION', 'Session is expired or revoked');
     }
-
-    return session;
   }
 
   private hashToken(accessToken: string): string {

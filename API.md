@@ -49,7 +49,9 @@ Common status codes:
 X-Brand-Id: brandA
 ```
 
-Required on every endpoint.
+Required on every endpoint except `GET /health` and `/docs`.
+
+The value is trimmed and must be 1-64 characters matching `^[A-Za-z0-9_-]+$`.
 
 ### Correlation header
 
@@ -66,6 +68,36 @@ Authorization: Bearer <accessToken>
 ```
 
 Required for authenticated endpoints.
+
+### Callback idempotency headers
+
+```http
+Idempotency-Key: idem_123
+X-Webhook-Event-Id: psp_evt_1001
+```
+
+Callback endpoints resolve the idempotency key from `Idempotency-Key`, then `X-Webhook-Event-Id`, then `payload.eventId`.
+
+---
+
+# Health
+
+## GET /health
+
+Returns service health without requiring `X-Brand-Id`.
+
+Response `200 OK`:
+
+```json
+{
+  "data": {
+    "status": "ok"
+  },
+  "meta": {
+    "requestId": "req_..."
+  }
+}
+```
 
 ---
 
@@ -260,6 +292,12 @@ Duplicate response `200 OK`:
 ```
 
 Missing idempotency key returns `400 IDEMPOTENCY_KEY_REQUIRED`.
+
+Malformed idempotency keys return `400 INVALID_IDEMPOTENCY_KEY`. The resolved key is trimmed, capped at 128 characters, and cannot contain control characters.
+
+Invalid provider slugs return `400 INVALID_PROVIDER`. Providers must match `^[a-z0-9_-]+$` and be at most 64 characters.
+
+The persisted `raw_events.idempotencyKey` is the resolved idempotency key. The persisted `raw_events.providerEventId` is `payload.eventId` when present, so a header idempotency key can differ from the provider event ID.
 
 ---
 

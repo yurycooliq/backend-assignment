@@ -1,14 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { IncomingHttpHeaders } from 'http';
+import { normalizeIdempotencyKey } from '../common/validation/request-values';
 
 @Injectable()
 export class IdempotencyService {
   resolveKey(headers: IncomingHttpHeaders, payload: unknown): string | null {
-    return (
-      this.firstHeader(headers, 'idempotency-key') ??
-      this.firstHeader(headers, 'x-webhook-event-id') ??
-      this.payloadEventId(payload)
-    );
+    const candidates = [
+      this.firstHeader(headers, 'idempotency-key'),
+      this.firstHeader(headers, 'x-webhook-event-id'),
+      this.payloadEventId(payload),
+    ];
+
+    for (const candidate of candidates) {
+      if (candidate === null || candidate.trim().length === 0) {
+        continue;
+      }
+
+      return normalizeIdempotencyKey(candidate);
+    }
+
+    return null;
+  }
+
+  extractProviderEventId(payload: unknown): string | undefined {
+    const eventId = this.payloadEventId(payload);
+
+    return eventId ? eventId.trim() : undefined;
   }
 
   private firstHeader(headers: IncomingHttpHeaders, name: string): string | null {
@@ -19,9 +36,7 @@ export class IdempotencyService {
       return null;
     }
 
-    const trimmed = candidate.trim();
-
-    return trimmed.length > 0 ? trimmed : null;
+    return candidate;
   }
 
   private payloadEventId(payload: unknown): string | null {
