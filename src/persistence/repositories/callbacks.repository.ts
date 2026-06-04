@@ -1,6 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { CallbackSource, IdempotencyKey, Prisma, RawEvent, RawEventStatus } from '@prisma/client';
-import { PrismaService } from '../prisma.service';
+import { Injectable } from "@nestjs/common";
+import {
+  CallbackSource,
+  IdempotencyKey,
+  Prisma,
+  RawEvent,
+  RawEventStatus,
+} from "@prisma/client";
+import { PrismaService } from "../prisma.service";
 
 type PrismaClientLike = PrismaService | Prisma.TransactionClient;
 
@@ -8,12 +14,19 @@ type PrismaClientLike = PrismaService | Prisma.TransactionClient;
 export class CallbacksRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  transaction<T>(handler: (client: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+  transaction<T>(
+    handler: (client: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
     return this.prisma.$transaction(handler);
   }
 
   createIdempotencyKey(
-    input: { brandId: string; source: CallbackSource; provider: string; key: string },
+    input: {
+      brandId: string;
+      source: CallbackSource;
+      provider: string;
+      key: string;
+    },
     client: PrismaClientLike = this.prisma,
   ): Promise<IdempotencyKey> {
     return client.idempotencyKey.create({
@@ -22,7 +35,12 @@ export class CallbacksRepository {
   }
 
   findIdempotencyKey(
-    scope: { brandId: string; source: CallbackSource; provider: string; key: string },
+    scope: {
+      brandId: string;
+      source: CallbackSource;
+      provider: string;
+      key: string;
+    },
     client: PrismaClientLike = this.prisma,
   ): Promise<IdempotencyKey | null> {
     return client.idempotencyKey.findUnique({
@@ -32,14 +50,21 @@ export class CallbacksRepository {
     });
   }
 
-  linkFirstRawEvent(id: string, firstRawEventId: string, client: PrismaClientLike = this.prisma): Promise<IdempotencyKey> {
+  linkFirstRawEvent(
+    id: string,
+    firstRawEventId: string,
+    client: PrismaClientLike = this.prisma,
+  ): Promise<IdempotencyKey> {
     return client.idempotencyKey.update({
       where: { id },
       data: { firstRawEventId },
     });
   }
 
-  incrementDuplicateCount(id: string, client: PrismaClientLike = this.prisma): Promise<IdempotencyKey> {
+  incrementDuplicateCount(
+    id: string,
+    client: PrismaClientLike = this.prisma,
+  ): Promise<IdempotencyKey> {
     return client.idempotencyKey.update({
       where: { id },
       data: {

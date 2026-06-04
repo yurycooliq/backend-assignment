@@ -209,6 +209,8 @@ The key is trimmed, capped at 128 characters, and must not contain control chara
 
 `raw_events.idempotencyKey` stores the resolved idempotency key. `raw_events.providerEventId` stores `payload.eventId` when the provider sends one, so a header idempotency key and provider event ID remain distinct.
 
+Callbacks without a stable idempotency key are rejected before any raw event is persisted.
+
 A duplicate callback returns a successful 2xx response but is not treated as a second processable event.
 
 ---

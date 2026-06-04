@@ -1,7 +1,13 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
-import { Request, Response } from 'express';
-import { ApplicationError } from './application-error';
-import { RequestWithContext } from '../http/request-context';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  HttpStatus,
+} from "@nestjs/common";
+import { Request, Response } from "express";
+import { ApplicationError } from "./application-error";
+import { RequestWithContext } from "../http/request-context";
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -9,7 +15,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request & RequestWithContext>();
     const response = ctx.getResponse<Response>();
-    const requestId = request.requestContext?.requestId ?? 'req_unknown';
+    const requestId = request.requestContext?.requestId ?? "req_unknown";
     const error = this.toErrorResponse(exception);
 
     response.status(error.statusCode).json({
@@ -41,7 +47,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       const statusCode = exception.getStatus();
       const response = exception.getResponse();
       const message =
-        typeof response === 'object' && response !== null && 'message' in response
+        typeof response === "object" &&
+        response !== null &&
+        "message" in response
           ? String((response as { message: unknown }).message)
           : exception.message;
 
@@ -55,8 +63,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Internal server error',
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Internal server error",
       details: {},
     };
   }
@@ -64,19 +72,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   private defaultCodeForStatus(statusCode: number): string {
     switch (statusCode) {
       case HttpStatus.BAD_REQUEST:
-        return 'BAD_REQUEST';
+        return "BAD_REQUEST";
       case HttpStatus.UNAUTHORIZED:
-        return 'UNAUTHORIZED';
+        return "UNAUTHORIZED";
       case HttpStatus.FORBIDDEN:
-        return 'FORBIDDEN';
+        return "FORBIDDEN";
       case HttpStatus.NOT_FOUND:
-        return 'NOT_FOUND';
+        return "NOT_FOUND";
       case HttpStatus.CONFLICT:
-        return 'CONFLICT';
+        return "CONFLICT";
       case HttpStatus.UNPROCESSABLE_ENTITY:
-        return 'VALIDATION_FAILED';
+        return "VALIDATION_FAILED";
       default:
-        return 'INTERNAL_SERVER_ERROR';
+        return "INTERNAL_SERVER_ERROR";
     }
   }
 }

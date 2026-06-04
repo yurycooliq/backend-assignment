@@ -10,157 +10,157 @@ paths:
     get:
       summary: Service health
       responses:
-        '200':
+        "200":
           description: Service is healthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponse'
+                $ref: "#/components/schemas/HealthResponse"
   /auth/register:
     post:
       summary: Register user in current brand
       parameters:
-        - $ref: '#/components/parameters/BrandId'
-        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: "#/components/parameters/BrandId"
+        - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthRequest'
+              $ref: "#/components/schemas/AuthRequest"
       responses:
-        '201':
+        "201":
           description: User registered
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '409':
+                $ref: "#/components/schemas/AuthResponse"
+        "409":
           description: User already exists in this brand
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
   /auth/login:
     post:
       summary: Login user in current brand
       parameters:
-        - $ref: '#/components/parameters/BrandId'
-        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: "#/components/parameters/BrandId"
+        - $ref: "#/components/parameters/CorrelationId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthRequest'
+              $ref: "#/components/schemas/AuthRequest"
       responses:
-        '200':
+        "200":
           description: User logged in
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '401':
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
           description: Invalid credentials
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
   /profile/me:
     get:
       summary: Get current profile
       parameters:
-        - $ref: '#/components/parameters/BrandId'
-        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: "#/components/parameters/BrandId"
+        - $ref: "#/components/parameters/CorrelationId"
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Current profile
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProfileResponse'
-        '401':
+                $ref: "#/components/schemas/ProfileResponse"
+        "401":
           description: Invalid session
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
           description: Tenant mismatch
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
   /webhooks/psp/{provider}:
     post:
       summary: Ingest PSP callback
       parameters:
-        - $ref: '#/components/parameters/BrandId'
-        - $ref: '#/components/parameters/CorrelationId'
-        - $ref: '#/components/parameters/IdempotencyKey'
-        - $ref: '#/components/parameters/WebhookEventId'
-        - $ref: '#/components/parameters/Provider'
+        - $ref: "#/components/parameters/BrandId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/WebhookEventId"
+        - $ref: "#/components/parameters/Provider"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WebhookPayload'
+              $ref: "#/components/schemas/WebhookPayload"
       responses:
-        '202':
+        "202":
           description: First callback accepted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookAcceptedResponse'
-        '200':
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "200":
           description: Duplicate callback ignored
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookDuplicateResponse'
-        '400':
+                $ref: "#/components/schemas/WebhookDuplicateResponse"
+        "400":
           description: Invalid callback request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
   /webhooks/gsp/{provider}:
     post:
       summary: Ingest GSP callback
       parameters:
-        - $ref: '#/components/parameters/BrandId'
-        - $ref: '#/components/parameters/CorrelationId'
-        - $ref: '#/components/parameters/IdempotencyKey'
-        - $ref: '#/components/parameters/WebhookEventId'
-        - $ref: '#/components/parameters/Provider'
+        - $ref: "#/components/parameters/BrandId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/WebhookEventId"
+        - $ref: "#/components/parameters/Provider"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WebhookPayload'
+              $ref: "#/components/schemas/WebhookPayload"
       responses:
-        '202':
+        "202":
           description: First callback accepted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookAcceptedResponse'
-        '200':
+                $ref: "#/components/schemas/WebhookAcceptedResponse"
+        "200":
           description: Duplicate callback ignored
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookDuplicateResponse'
-        '400':
+                $ref: "#/components/schemas/WebhookDuplicateResponse"
+        "400":
           description: Invalid callback request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   securitySchemes:
     bearerAuth:
@@ -174,7 +174,7 @@ components:
       schema:
         type: string
         maxLength: 64
-        pattern: '^[A-Za-z0-9_-]+$'
+        pattern: "^[A-Za-z0-9_-]+$"
       example: brandA
     CorrelationId:
       name: X-Correlation-Id
@@ -207,7 +207,7 @@ components:
       schema:
         type: string
         maxLength: 64
-        pattern: '^[a-z0-9_-]+$'
+        pattern: "^[a-z0-9_-]+$"
       example: mock-pay
   schemas:
     HealthResponse:
@@ -222,7 +222,7 @@ components:
               type: string
               enum: [ok]
         meta:
-          $ref: '#/components/schemas/Meta'
+          $ref: "#/components/schemas/Meta"
     AuthRequest:
       type: object
       required: [email, password]
@@ -244,7 +244,7 @@ components:
           required: [user, session]
           properties:
             user:
-              $ref: '#/components/schemas/User'
+              $ref: "#/components/schemas/User"
             session:
               type: object
               required: [accessToken, expiresAt]
@@ -255,15 +255,15 @@ components:
                   type: string
                   format: date-time
         meta:
-          $ref: '#/components/schemas/Meta'
+          $ref: "#/components/schemas/Meta"
     ProfileResponse:
       type: object
       required: [data, meta]
       properties:
         data:
-          $ref: '#/components/schemas/User'
+          $ref: "#/components/schemas/User"
         meta:
-          $ref: '#/components/schemas/Meta'
+          $ref: "#/components/schemas/Meta"
     User:
       type: object
       required: [id, brandId, email]
@@ -297,7 +297,8 @@ components:
       properties:
         data:
           type: object
-          required: [status, duplicate, source, provider, idempotencyKey, rawEventId]
+          required:
+            [status, duplicate, source, provider, idempotencyKey, rawEventId]
           properties:
             status:
               type: string
@@ -315,7 +316,7 @@ components:
             rawEventId:
               type: string
         meta:
-          $ref: '#/components/schemas/Meta'
+          $ref: "#/components/schemas/Meta"
     WebhookDuplicateResponse:
       type: object
       required: [data, meta]
@@ -340,7 +341,7 @@ components:
             firstRawEventId:
               type: string
         meta:
-          $ref: '#/components/schemas/Meta'
+          $ref: "#/components/schemas/Meta"
     Meta:
       type: object
       required: [requestId]

@@ -1,4 +1,4 @@
-import { HttpStatus } from '@nestjs/common';
+import { HttpStatus } from "@nestjs/common";
 
 export class ApplicationError extends Error {
   constructor(
@@ -10,23 +10,52 @@ export class ApplicationError extends Error {
     super(message);
   }
 
-  static badRequest(code: string, message: string, details: Record<string, unknown> = {}): ApplicationError {
+  static badRequest(
+    code: string,
+    message: string,
+    details: Record<string, unknown> = {},
+  ): ApplicationError {
     return new ApplicationError(HttpStatus.BAD_REQUEST, code, message, details);
   }
 
-  static unauthorized(code: string, message: string, details: Record<string, unknown> = {}): ApplicationError {
-    return new ApplicationError(HttpStatus.UNAUTHORIZED, code, message, details);
+  static unauthorized(
+    code: string,
+    message: string,
+    details: Record<string, unknown> = {},
+  ): ApplicationError {
+    return new ApplicationError(
+      HttpStatus.UNAUTHORIZED,
+      code,
+      message,
+      details,
+    );
   }
 
-  static forbidden(code: string, message: string, details: Record<string, unknown> = {}): ApplicationError {
+  static forbidden(
+    code: string,
+    message: string,
+    details: Record<string, unknown> = {},
+  ): ApplicationError {
     return new ApplicationError(HttpStatus.FORBIDDEN, code, message, details);
   }
 
-  static conflict(code: string, message: string, details: Record<string, unknown> = {}): ApplicationError {
+  static conflict(
+    code: string,
+    message: string,
+    details: Record<string, unknown> = {},
+  ): ApplicationError {
     return new ApplicationError(HttpStatus.CONFLICT, code, message, details);
   }
 
-  static validation(message: string, details: Record<string, unknown> = {}): ApplicationError {
-    return new ApplicationError(HttpStatus.UNPROCESSABLE_ENTITY, 'VALIDATION_FAILED', message, details);
+  static validation(
+    message: string,
+    details: Record<string, unknown> = {},
+  ): ApplicationError {
+    return new ApplicationError(
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      "VALIDATION_FAILED",
+      message,
+      details,
+    );
   }
 }

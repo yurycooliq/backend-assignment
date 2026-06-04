@@ -1,6 +1,11 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
-import { Observable, map } from 'rxjs';
-import { RequestWithContext } from './request-context';
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+} from "@nestjs/common";
+import { Observable, map } from "rxjs";
+import { RequestWithContext } from "./request-context";
 
 @Injectable()
 export class ResponseEnvelopeInterceptor implements NestInterceptor {
@@ -11,7 +16,7 @@ export class ResponseEnvelopeInterceptor implements NestInterceptor {
       map((data: unknown) => ({
         data: data ?? {},
         meta: {
-          requestId: request.requestContext?.requestId ?? 'req_unknown',
+          requestId: request.requestContext?.requestId ?? "req_unknown",
         },
       })),
     );

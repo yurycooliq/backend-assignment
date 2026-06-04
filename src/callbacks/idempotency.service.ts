@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { IncomingHttpHeaders } from 'http';
-import { normalizeIdempotencyKey } from '../common/validation/request-values';
+import { Injectable } from "@nestjs/common";
+import { IncomingHttpHeaders } from "http";
+import { normalizeIdempotencyKey } from "../common/validation/request-values";
 
 @Injectable()
 export class IdempotencyService {
   resolveKey(headers: IncomingHttpHeaders, payload: unknown): string | null {
     const candidates = [
-      this.firstHeader(headers, 'idempotency-key'),
-      this.firstHeader(headers, 'x-webhook-event-id'),
+      this.firstHeader(headers, "idempotency-key"),
+      this.firstHeader(headers, "x-webhook-event-id"),
       this.payloadEventId(payload),
     ];
 
@@ -28,11 +28,14 @@ export class IdempotencyService {
     return eventId ? eventId.trim() : undefined;
   }
 
-  private firstHeader(headers: IncomingHttpHeaders, name: string): string | null {
+  private firstHeader(
+    headers: IncomingHttpHeaders,
+    name: string,
+  ): string | null {
     const value = headers[name];
     const candidate = Array.isArray(value) ? value[0] : value;
 
-    if (typeof candidate !== 'string') {
+    if (typeof candidate !== "string") {
       return null;
     }
 
@@ -40,13 +43,17 @@ export class IdempotencyService {
   }
 
   private payloadEventId(payload: unknown): string | null {
-    if (typeof payload !== 'object' || payload === null || !('eventId' in payload)) {
+    if (
+      typeof payload !== "object" ||
+      payload === null ||
+      !("eventId" in payload)
+    ) {
       return null;
     }
 
     const eventId = (payload as { eventId?: unknown }).eventId;
 
-    if (typeof eventId !== 'string') {
+    if (typeof eventId !== "string") {
       return null;
     }
 

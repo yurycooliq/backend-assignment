@@ -1,5 +1,5 @@
-import { CallbackSource } from '@prisma/client';
-import { IncomingHttpHeaders } from 'http';
+import { CallbackSource } from "@prisma/client";
+import { IncomingHttpHeaders } from "http";
 
 export interface IngestCallbackInput {
   brandId: string;
@@ -11,7 +11,7 @@ export interface IngestCallbackInput {
 }
 
 export interface IngestCallbackResult {
-  status: 'accepted' | 'duplicate_ignored';
+  status: "accepted" | "duplicate_ignored";
   duplicate: boolean;
   source: CallbackSource;
   provider: string;

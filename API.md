@@ -29,15 +29,15 @@ All errors should use this shape:
 
 Common status codes:
 
-| Status | Meaning |
-| --- | --- |
-| `400` | Invalid request, missing tenant, missing idempotency key |
-| `401` | Missing or invalid session token |
-| `403` | Authenticated session belongs to another brand |
-| `404` | Resource not found in current brand |
-| `409` | Conflict, for example duplicate registration in same brand |
-| `422` | DTO/schema validation failed |
-| `500` | Unexpected server error |
+| Status | Meaning                                                    |
+| ------ | ---------------------------------------------------------- |
+| `400`  | Invalid request, missing tenant, missing idempotency key   |
+| `401`  | Missing or invalid session token                           |
+| `403`  | Authenticated session belongs to another brand             |
+| `404`  | Resource not found in current brand                        |
+| `409`  | Conflict, for example duplicate registration in same brand |
+| `422`  | DTO/schema validation failed                               |
+| `500`  | Unexpected server error                                    |
 
 ---
 
@@ -246,11 +246,11 @@ Request:
   "eventId": "psp_evt_1001",
   "type": "payment.succeeded",
   "occurredAt": "2026-06-04T12:00:00.000Z",
-    "data": {
-      "paymentId": "pay_123",
-      "userId": "7fddf1e5-f94f-4f92-94fb-829f4f40a8d6",
-      "amount": "100.00",
-      "currency": "EUR"
+  "data": {
+    "paymentId": "pay_123",
+    "userId": "7fddf1e5-f94f-4f92-94fb-829f4f40a8d6",
+    "amount": "100.00",
+    "currency": "EUR"
   }
 }
 ```

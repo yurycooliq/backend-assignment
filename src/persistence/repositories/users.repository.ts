@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
-import { PrismaService } from '../prisma.service';
+import { Injectable } from "@nestjs/common";
+import { Prisma, User } from "@prisma/client";
+import { PrismaService } from "../prisma.service";
 
 type PrismaClientLike = PrismaService | Prisma.TransactionClient;
 
@@ -17,7 +17,11 @@ export class UsersRepository {
     });
   }
 
-  findByEmail(brandId: string, email: string, client: PrismaClientLike = this.prisma): Promise<User | null> {
+  findByEmail(
+    brandId: string,
+    email: string,
+    client: PrismaClientLike = this.prisma,
+  ): Promise<User | null> {
     return client.user.findUnique({
       where: {
         brandId_email: {
@@ -28,7 +32,11 @@ export class UsersRepository {
     });
   }
 
-  findById(brandId: string, id: string, client: PrismaClientLike = this.prisma): Promise<User | null> {
+  findById(
+    brandId: string,
+    id: string,
+    client: PrismaClientLike = this.prisma,
+  ): Promise<User | null> {
     return client.user.findFirst({
       where: {
         brandId,

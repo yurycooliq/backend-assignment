@@ -1,12 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, RawEventStatus } from '@prisma/client';
-import { IncomingHttpHeaders } from 'http';
-import { ApplicationError } from '../common/errors/application-error';
-import { normalizeProvider } from '../common/validation/request-values';
-import { isUniqueConstraintViolation } from '../persistence/prisma-errors';
-import { CallbacksRepository } from '../persistence/repositories/callbacks.repository';
-import { IdempotencyService } from './idempotency.service';
-import { IngestCallbackInput, IngestCallbackResult } from './dto/ingest-callback.dto';
+import { Injectable } from "@nestjs/common";
+import { Prisma, RawEventStatus } from "@prisma/client";
+import { IncomingHttpHeaders } from "http";
+import { ApplicationError } from "../common/errors/application-error";
+import { normalizeProvider } from "../common/validation/request-values";
+import { isUniqueConstraintViolation } from "../persistence/prisma-errors";
+import { CallbacksRepository } from "../persistence/repositories/callbacks.repository";
+import { IdempotencyService } from "./idempotency.service";
+import {
+  IngestCallbackInput,
+  IngestCallbackResult,
+} from "./dto/ingest-callback.dto";
 
 @Injectable()
 export class IngestCallbackUseCase {
@@ -16,11 +19,20 @@ export class IngestCallbackUseCase {
   ) {}
 
   async execute(input: IngestCallbackInput): Promise<IngestCallbackResult> {
-    const normalizedInput = { ...input, provider: normalizeProvider(input.provider) };
-    const idempotencyKey = this.idempotencyService.resolveKey(input.headers, input.payload);
+    const normalizedInput = {
+      ...input,
+      provider: normalizeProvider(input.provider),
+    };
+    const idempotencyKey = this.idempotencyService.resolveKey(
+      input.headers,
+      input.payload,
+    );
 
     if (!idempotencyKey) {
-      throw ApplicationError.badRequest('IDEMPOTENCY_KEY_REQUIRED', 'Stable callback idempotency key is required');
+      throw ApplicationError.badRequest(
+        "IDEMPOTENCY_KEY_REQUIRED",
+        "Stable callback idempotency key is required",
+      );
     }
 
     try {
@@ -34,7 +46,10 @@ export class IngestCallbackUseCase {
     }
   }
 
-  private createFirstEvent(input: IngestCallbackInput, idempotencyKey: string): Promise<IngestCallbackResult> {
+  private createFirstEvent(
+    input: IngestCallbackInput,
+    idempotencyKey: string,
+  ): Promise<IngestCallbackResult> {
     return this.callbacksRepository.transaction(async (client) => {
       const idempotency = await this.callbacksRepository.createIdempotencyKey(
         {
@@ -51,7 +66,9 @@ export class IngestCallbackUseCase {
           source: input.source,
           provider: input.provider,
           idempotencyKey,
-          providerEventId: this.idempotencyService.extractProviderEventId(input.payload),
+          providerEventId: this.idempotencyService.extractProviderEventId(
+            input.payload,
+          ),
           status: RawEventStatus.PENDING,
           payload: toJson(input.payload),
           headers: toJson(safeHeaders(input.headers)),
@@ -60,10 +77,14 @@ export class IngestCallbackUseCase {
         client,
       );
 
-      await this.callbacksRepository.linkFirstRawEvent(idempotency.id, rawEvent.id, client);
+      await this.callbacksRepository.linkFirstRawEvent(
+        idempotency.id,
+        rawEvent.id,
+        client,
+      );
 
       return {
-        status: 'accepted',
+        status: "accepted",
         duplicate: false,
         source: input.source,
         provider: input.provider,
@@ -73,7 +94,10 @@ export class IngestCallbackUseCase {
     });
   }
 
-  private recordDuplicateEvent(input: IngestCallbackInput, idempotencyKey: string): Promise<IngestCallbackResult> {
+  private recordDuplicateEvent(
+    input: IngestCallbackInput,
+    idempotencyKey: string,
+  ): Promise<IngestCallbackResult> {
     return this.callbacksRepository.transaction(async (client) => {
       const existing = await this.callbacksRepository.findIdempotencyKey(
         {
@@ -86,7 +110,10 @@ export class IngestCallbackUseCase {
       );
 
       if (!existing) {
-        throw ApplicationError.badRequest('IDEMPOTENCY_LOOKUP_FAILED', 'Unable to resolve duplicate idempotency key');
+        throw ApplicationError.badRequest(
+          "IDEMPOTENCY_LOOKUP_FAILED",
+          "Unable to resolve duplicate idempotency key",
+        );
       }
 
       await this.callbacksRepository.createRawEvent(
@@ -95,7 +122,9 @@ export class IngestCallbackUseCase {
           source: input.source,
           provider: input.provider,
           idempotencyKey,
-          providerEventId: this.idempotencyService.extractProviderEventId(input.payload),
+          providerEventId: this.idempotencyService.extractProviderEventId(
+            input.payload,
+          ),
           status: RawEventStatus.DUPLICATE,
           payload: toJson(input.payload),
           headers: toJson(safeHeaders(input.headers)),
@@ -104,10 +133,13 @@ export class IngestCallbackUseCase {
         },
         client,
       );
-      const updated = await this.callbacksRepository.incrementDuplicateCount(existing.id, client);
+      const updated = await this.callbacksRepository.incrementDuplicateCount(
+        existing.id,
+        client,
+      );
 
       return {
-        status: 'duplicate_ignored',
+        status: "duplicate_ignored",
         duplicate: true,
         source: input.source,
         provider: input.provider,
@@ -118,14 +150,16 @@ export class IngestCallbackUseCase {
   }
 }
 
-function safeHeaders(headers: IncomingHttpHeaders): Record<string, string | string[]> {
+function safeHeaders(
+  headers: IncomingHttpHeaders,
+): Record<string, string | string[]> {
   const allowedHeaderNames = new Set([
-    'idempotency-key',
-    'x-webhook-event-id',
-    'x-brand-id',
-    'x-correlation-id',
-    'x-request-id',
-    'content-type',
+    "idempotency-key",
+    "x-webhook-event-id",
+    "x-brand-id",
+    "x-correlation-id",
+    "x-request-id",
+    "content-type",
   ]);
   const result: Record<string, string | string[]> = {};
 
