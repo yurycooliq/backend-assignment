@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CallbackSource {
+  PSP
+  GSP
+}
+
+enum RawEventStatus {
+  PENDING
+  DUPLICATE
+  INVALID
+}
+
+model User {
+  id           String    @id @default(uuid())
+  brandId      String
+  email        String
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+
+  @@unique([brandId, email])
+  @@index([brandId])
+  @@map("users")
+}
+
+model Session {
+  id        String    @id @default(uuid())
+  brandId   String
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([brandId, userId])
+  @@index([brandId, tokenHash])
+  @@map("sessions")
+}
+
+model IdempotencyKey {
+  id              String         @id @default(uuid())
+  brandId         String
+  source          CallbackSource
+  provider        String
+  key             String
+  firstRawEventId String?
+  duplicateCount  Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([brandId, source, provider, key])
+  @@index([brandId, source, provider])
+  @@map("idempotency_keys")
+}
+
+model RawEvent {
+  id                    String         @id @default(uuid())
+  brandId               String
+  source                CallbackSource
+  provider              String
+  idempotencyKey        String
+  providerEventId       String?
+  status                RawEventStatus
+  payload               Json
+  headers               Json?
+  correlationId         String?
+  duplicateOfRawEventId String?
+  receivedAt            DateTime       @default(now())
+
+  @@index([brandId, source, provider])
+  @@index([brandId, idempotencyKey])
+  @@index([status, receivedAt])
+  @@map("raw_events")
+}

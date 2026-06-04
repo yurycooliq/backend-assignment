@@ -1,0 +1,328 @@
+openapi: 3.0.3
+info:
+  title: Backend Callback MVP API
+  version: 1.0.0
+  description: Identity and PSP/GSP callback ingestion service.
+servers:
+  - url: http://localhost:3000
+paths:
+  /auth/register:
+    post:
+      summary: Register user in current brand
+      parameters:
+        - $ref: '#/components/parameters/BrandId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '201':
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          description: User already exists in this brand
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/login:
+    post:
+      summary: Login user in current brand
+      parameters:
+        - $ref: '#/components/parameters/BrandId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: User logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /profile/me:
+    get:
+      summary: Get current profile
+      parameters:
+        - $ref: '#/components/parameters/BrandId'
+        - $ref: '#/components/parameters/CorrelationId'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '401':
+          description: Invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tenant mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /webhooks/psp/{provider}:
+    post:
+      summary: Ingest PSP callback
+      parameters:
+        - $ref: '#/components/parameters/BrandId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/WebhookEventId'
+        - $ref: '#/components/parameters/Provider'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayload'
+      responses:
+        '202':
+          description: First callback accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookAcceptedResponse'
+        '200':
+          description: Duplicate callback ignored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDuplicateResponse'
+        '400':
+          description: Invalid callback request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /webhooks/gsp/{provider}:
+    post:
+      summary: Ingest GSP callback
+      parameters:
+        - $ref: '#/components/parameters/BrandId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/WebhookEventId'
+        - $ref: '#/components/parameters/Provider'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayload'
+      responses:
+        '202':
+          description: First callback accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookAcceptedResponse'
+        '200':
+          description: Duplicate callback ignored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDuplicateResponse'
+        '400':
+          description: Invalid callback request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    BrandId:
+      name: X-Brand-Id
+      in: header
+      required: true
+      schema:
+        type: string
+      example: brandA
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+      example: demo-request-001
+    WebhookEventId:
+      name: X-Webhook-Event-Id
+      in: header
+      required: false
+      schema:
+        type: string
+      example: psp_evt_1001
+    Provider:
+      name: provider
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-z0-9_-]+$'
+      example: mock-pay
+  schemas:
+    AuthRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: alice@example.com
+        password:
+          type: string
+          minLength: 8
+          example: Password123!
+    AuthResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [user, session]
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            session:
+              type: object
+              required: [accessToken, expiresAt]
+              properties:
+                accessToken:
+                  type: string
+                expiresAt:
+                  type: string
+                  format: date-time
+        meta:
+          $ref: '#/components/schemas/Meta'
+    ProfileResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/User'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    User:
+      type: object
+      required: [id, brandId, email]
+      properties:
+        id:
+          type: string
+        brandId:
+          type: string
+        email:
+          type: string
+          format: email
+    WebhookPayload:
+      type: object
+      required: [type, data]
+      properties:
+        eventId:
+          type: string
+          example: psp_evt_1001
+        type:
+          type: string
+          example: payment.succeeded
+        occurredAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          additionalProperties: true
+    WebhookAcceptedResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [status, duplicate, source, provider, idempotencyKey, rawEventId]
+          properties:
+            status:
+              type: string
+              enum: [accepted]
+            duplicate:
+              type: boolean
+              example: false
+            source:
+              type: string
+              enum: [PSP, GSP]
+            provider:
+              type: string
+            idempotencyKey:
+              type: string
+            rawEventId:
+              type: string
+        meta:
+          $ref: '#/components/schemas/Meta'
+    WebhookDuplicateResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [status, duplicate, source, provider, idempotencyKey]
+          properties:
+            status:
+              type: string
+              enum: [duplicate_ignored]
+            duplicate:
+              type: boolean
+              example: true
+            source:
+              type: string
+              enum: [PSP, GSP]
+            provider:
+              type: string
+            idempotencyKey:
+              type: string
+            firstRawEventId:
+              type: string
+        meta:
+          $ref: '#/components/schemas/Meta'
+    Meta:
+      type: object
+      required: [requestId]
+      properties:
+        requestId:
+          type: string
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, requestId]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+            requestId:
+              type: string
