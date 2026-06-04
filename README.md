@@ -1,5 +1,17 @@
 # Backend Callback MVP
 
+[![CI](https://github.com/yurycooliq/backend-assignment/actions/workflows/ci.yml/badge.svg)](https://github.com/yurycooliq/backend-assignment/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![Node.js](https://img.shields.io/badge/node.js-20%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-10.33.2-F69220?logo=pnpm&logoColor=white)](https://pnpm.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-6.19-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![Jest](https://img.shields.io/badge/Jest-tested-C21325?logo=jest&logoColor=white)](https://jestjs.io/)
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-documented-6BA539?logo=openapiinitiative&logoColor=white)](./API.md)
+
 Small NestJS + TypeScript backend service demonstrating:
 
 - identity basics;
